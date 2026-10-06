@@ -1,6 +1,6 @@
 ﻿'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { QrScanner } from '@/components/qr-scanner'
 import { InstallApp } from '@/components/install-app'
 import {
@@ -15,13 +15,13 @@ import {
   ChevronRight,
   CircleHelp,
   Clock3,
-  CreditCard,
   Eye,
   EyeOff,
   FileText,
   Fingerprint,
   History,
   Landmark,
+  LoaderCircle,
   LockKeyhole,
   MapPin,
   Menu,
@@ -31,16 +31,12 @@ import {
   ScanLine,
   Settings,
   ShieldCheck,
-  Smartphone,
   UserRound,
-  WalletCards,
   X,
   Zap,
 } from 'lucide-react'
 
 type Tab = 'home' | 'activity' | 'routes' | 'profile'
-type PaymentMethod = 'QR code' | 'Bank card' | 'eWallet' | 'Mobile Money'
-
 const transactions = [
   { id: 'TX-48291', time: '09:42 AM', route: 'Airport → CBD', method: 'QR code', amount: 'R 18.50', status: 'Paid', initials: 'LK', tone: 'mint' },
   { id: 'TX-48290', time: '09:18 AM', route: 'CBD → Observatory', method: 'Mobile Money', amount: 'R 15.00', status: 'Paid', initials: 'JM', tone: 'blue' },
@@ -58,9 +54,8 @@ export default function Page() {
   const [tab, setTab] = useState<Tab>('home')
   const [showScan, setShowScan] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('QR code')
-  const [amount, setAmount] = useState('18.50')
-  const [paymentState, setPaymentState] = useState<'scan' | 'review' | 'success' | 'declined'>('scan')
+  const amount = '18.50'
+  const [paymentState, setPaymentState] = useState<'scan' | 'processing' | 'success' | 'declined'>('scan')
   const [showBalance, setShowBalance] = useState(true)
 
   const openScanner = () => { setPaymentState('scan'); setShowScan(true) }
@@ -72,7 +67,7 @@ export default function Page() {
           <div className="brand-lockup">
             <div className="brand-mark"><BusFront size={18} strokeWidth={2.5} /></div><span>RankConnect<span className="brand-dot">.</span></span></div>
           <div className="top-actions">
-            {/* <InstallApp /> */}
+            <InstallApp />
             <button className="icon-button" aria-label="Notifications" onClick={() => setShowNotifications(!showNotifications)}><Bell size={19} /><span className="notification-dot" /></button>
             <button className="avatar" aria-label="Open profile" onClick={() => setTab('profile')}>TM</button>
           </div>
@@ -95,7 +90,7 @@ export default function Page() {
         </nav>
       </div>
 
-      {showScan && <ScanSheet paymentMethod={paymentMethod} setPaymentMethod={setPaymentMethod} amount={amount} setAmount={setAmount} state={paymentState} setState={setPaymentState} onClose={() => setShowScan(false)} />}
+      {showScan && <ScanSheet amount={amount} state={paymentState} setState={setPaymentState} onClose={() => setShowScan(false)} />}
     </main>
   )
 }
@@ -136,5 +131,44 @@ function ProfileScreen() { const [section, setSection] = useState<string | null>
 function ScreenTitle({ eyebrow, title, action }: { eyebrow: string; title: string; action?: React.ReactNode }) { return <div className="screen-title"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1></div>{action}</div> }
 function SettingRow({ icon, title, detail, onClick }: { icon: React.ReactNode; title: string; detail: string; onClick: () => void }) { return <button className="setting-row" onClick={onClick}><span className="setting-icon">{icon}</span><span><strong>{title}</strong><small>{detail}</small></span><ChevronRight size={17} /></button> }
 
-function ScanSheet({ paymentMethod, setPaymentMethod, amount, setAmount, state, setState, onClose }: { paymentMethod: PaymentMethod; setPaymentMethod: (method: PaymentMethod) => void; amount: string; setAmount: (amount: string) => void; state: 'scan' | 'review' | 'success' | 'declined'; setState: (state: 'scan' | 'review' | 'success' | 'declined') => void; onClose: () => void }) { const [scannedCode, setScannedCode] = useState(''); return <div className="sheet-backdrop"><div className="scan-sheet"><div className="sheet-handle" /><button className="sheet-close" onClick={onClose} aria-label="Close scanner"><X size={19} /></button>{state === 'scan' && <><div className="scanner-heading"><div className="scanner-icon"><ScanLine size={25} /></div><p className="eyebrow">NEW PAYMENT</p><h2>Scan passenger QR</h2><span>Ask the passenger to show their RidePay code</span></div><div className="qr-scanner-container"><QrScanner qrCodeContainerId="ridepay-qr-reader" onScanSuccess={(decodedText) => { setScannedCode(decodedText); setState('review') }} onScanError={() => undefined} /></div><button className="demo-scan" onClick={() => setState('review')}>Use demo passenger <ArrowRight size={16} /></button></>}{state === 'review' && <><div className="review-heading"><div className="passenger-avatar">AM</div><p className="eyebrow">PASSENGER FOUND</p><h2>Alex Morgan</h2><span>Wallet balance · <strong>R 246.80</strong></span>{scannedCode && <span className="scanned-code">Scanned QR: {scannedCode}</span>}</div><div className="amount-card"><label htmlFor="fare-amount">Enter fare amount</label><div className="amount-input"><span>R</span><input id="fare-amount" inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)} /><small>ZAR</small></div><div className="amount-hint"><MapPin size={13} /> Airport → CBD <button onClick={() => setAmount('18.50')}>Use route fare</button></div></div><div className="method-label">PAYMENT METHOD</div><div className="payment-methods">{(['QR code', 'Bank card', 'eWallet', 'Mobile Money'] as PaymentMethod[]).map(method => <button key={method} className={paymentMethod === method ? 'chosen' : ''} onClick={() => setPaymentMethod(method)}>{method === 'QR code' ? <QrCode size={16} /> : method === 'Bank card' ? <CreditCard size={16} /> : method === 'eWallet' ? <WalletCards size={16} /> : <Smartphone size={16} />}{method}</button>)}</div><button className="confirm-payment" onClick={() => setState(Number.parseFloat(amount) > 20 ? 'declined' : 'success')}>Collect R {amount || '0.00'} <ArrowRight size={18} /></button></>}{state === 'success' && <ResultState success amount={amount} onClose={onClose} />}{state === 'declined' && <ResultState success={false} amount={amount} onClose={onClose} />}</div></div> }
-function ResultState({ success, amount, onClose }: { success: boolean; amount: string; onClose: () => void }) { return <div className="result-state"><div className={`result-icon ${success ? 'success' : 'failure'}`}>{success ? <Check size={34} /> : <X size={34} />}</div><p className="eyebrow">PAYMENT {success ? 'COMPLETE' : 'DECLINED'}</p><h2>{success ? 'Fare collected' : 'Couldn’t collect fare'}</h2><strong className="result-amount">R {amount}</strong><p className="result-copy">{success ? 'R 18.50 has been added to your driver balance.' : 'The passenger’s available balance is too low for this fare. Try a different payment method.'}</p>{success && <div className="receipt"><span><Check size={14} /> Transaction ID</span><strong>TX-48292</strong></div>}{!success && <button className="try-again" onClick={onClose}>Try another method</button>}<button className={success ? 'done-button' : 'close-result'} onClick={onClose}>{success ? 'Done' : 'Close'}</button></div> }
+function ScanSheet({ amount, state, setState, onClose }: { amount: string; state: 'scan' | 'processing' | 'success' | 'declined'; setState: (state: 'scan' | 'processing' | 'success' | 'declined') => void; onClose: () => void }) {
+  const processingRef = useRef(false)
+  const scannedCodeRef = useRef('')
+
+  useEffect(() => {
+    if (state === 'scan') processingRef.current = false
+  }, [state])
+
+  useEffect(() => {
+    if (state !== 'processing') return
+    const timer = window.setTimeout(() => {
+      const declined = Number.parseFloat(amount) > 20 || /decline|reject/i.test(scannedCodeRef.current)
+      setState(declined ? 'declined' : 'success')
+    }, 300)
+    return () => window.clearTimeout(timer)
+  }, [amount, setState, state])
+
+  useEffect(() => {
+    if (state !== 'success' && state !== 'declined') return
+    const timer = window.setTimeout(() => setState('scan'), 1400)
+    return () => window.clearTimeout(timer)
+  }, [setState, state])
+
+  const beginVerification = (decodedText: string) => {
+    if (processingRef.current) return
+    processingRef.current = true
+    scannedCodeRef.current = decodedText
+    setState('processing')
+  }
+
+  return <div className="sheet-backdrop"><div className="scan-sheet"><div className="sheet-handle" /><button className="sheet-close" onClick={onClose} aria-label="Close scanner"><X size={19} /></button>
+    {state === 'scan' && <><div className="scanner-heading"><div className="scanner-icon"><ScanLine size={25} /></div><p className="eyebrow">NEW PAYMENT</p><h2>Scan passenger QR</h2><span>Ask the passenger to show their RidePay code</span></div><div className="qr-scanner-container"><QrScanner qrCodeContainerId="ridepay-qr-reader" onScanSuccess={beginVerification} onScanError={() => undefined} /></div><button className="demo-scan" onClick={() => beginVerification('demo-passenger')}>Use demo passenger <ArrowRight size={16} /></button></>}
+    {state === 'processing' && <div className="result-state processing-state"><div className="result-icon success"><LoaderCircle className="processing-spinner" size={34} /></div><p className="eyebrow">PAYMENT CHECK</p><h2>Verifying fare…</h2><strong className="result-amount">R {amount}</strong><p className="result-copy">Checking passenger payment details.</p></div>}
+    {state === 'success' && <ResultState success amount={amount} />}
+    {state === 'declined' && <ResultState success={false} amount={amount} />}
+  </div></div>
+}
+
+function ResultState({ success, amount }: { success: boolean; amount: string }) {
+  return <div className="result-state"><div className={`result-icon ${success ? 'success' : 'failure'}`}>{success ? <Check size={34} /> : <X size={34} />}</div><p className="eyebrow">PAYMENT {success ? 'APPROVED' : 'DECLINED'}</p><h2>{success ? 'Fare collected' : 'Couldn’t collect fare'}</h2><strong className="result-amount">R {amount}</strong><p className="result-copy">{success ? `R ${amount} has been added to your driver balance.` : 'The passenger’s available balance is too low for this fare.'}</p>{success && <div className="receipt"><span><Check size={14} /> Transaction ID</span><strong>TX-48292</strong></div>}<p className="return-hint">Returning to scanner automatically</p><div className="return-progress"><i /></div></div>
+}
