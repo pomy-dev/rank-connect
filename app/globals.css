@@ -1418,38 +1418,13 @@ button {
   border-radius: 18px;
   background: #fff;
   min-height: 270px;
+  display: grid;
+  place-items: center;
+  padding: 16px;
 }
 
-.qr-code-reader {
+.qr-scanner-container .qr-frame {
   width: 100%;
-}
-
-.qr-code-reader video {
-  border-radius: 14px;
-  object-fit: cover;
-}
-
-.qr-code-reader #qr-reader__dashboard {
-  padding: 8px 10px 12px !important;
-  font-family: Arial, Helvetica, sans-serif;
-  font-size: 11px;
-}
-
-.qr-code-reader #qr-reader__dashboard_section_csr button,
-.qr-code-reader #qr-reader__dashboard_section_fsr button {
-  border: 0;
-  border-radius: 9px;
-  background: var(--teal);
-  color: white;
-  padding: 8px 10px;
-  font-weight: 700;
-}
-
-.qr-code-reader select {
-  max-width: 100%;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 6px;
 }
 
 @media (max-width: 520px) {
