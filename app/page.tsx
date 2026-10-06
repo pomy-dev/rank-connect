@@ -160,12 +160,18 @@ function ScanSheet({ amount, state, setState, onClose }: { amount: string; state
     setState('processing')
   }
 
-  return <div className="sheet-backdrop"><div className="scan-sheet"><div className="sheet-handle" /><button className="sheet-close" onClick={onClose} aria-label="Close scanner"><X size={19} /></button>
-    {state === 'scan' && <><div className="scanner-heading"><div className="scanner-icon"><ScanLine size={25} /></div><p className="eyebrow">NEW PAYMENT</p><h2>Scan passenger QR</h2><span>Camera scanning is temporarily unavailable</span></div><div className="qr-scanner-container"><div className="qr-frame" role="img" aria-label="QR scanner placeholder"><span className="corner top-left" /><span className="corner top-right" /><span className="corner bottom-left" /><span className="corner bottom-right" /><div className="qr-placeholder"><Camera size={34} /><span>Camera preview placeholder</span></div><div className="scan-line" /></div></div><button className="demo-scan" onClick={() => beginVerification('demo-passenger')}>Simulate QR scan <ArrowRight size={16} /></button></>}
-    {state === 'processing' && <div className="result-state processing-state"><div className="result-icon success"><LoaderCircle className="processing-spinner" size={34} /></div><p className="eyebrow">PAYMENT CHECK</p><h2>Verifying fare…</h2><strong className="result-amount">R {amount}</strong><p className="result-copy">Checking passenger payment details.</p></div>}
-    {state === 'success' && <ResultState success amount={amount} />}
-    {state === 'declined' && <ResultState success={false} amount={amount} />}
-  </div></div>
+  return (
+    <div className="sheet-backdrop">
+      <div className="scan-sheet">
+        <div className="sheet-handle" />
+        <button className="sheet-close" onClick={onClose} aria-label="Close scanner"><X size={19} /></button>
+        {state === 'scan' && <><div className="scanner-heading"><div className="scanner-icon"><ScanLine size={25} /></div><p className="eyebrow">NEW PAYMENT</p><h2>Scan passenger QR</h2><span>Camera scanning is temporarily unavailable</span></div><div className="qr-scanner-container"><div className="qr-frame" role="img" aria-label="QR scanner placeholder"><span className="corner top-left" /><span className="corner top-right" /><span className="corner bottom-left" /><span className="corner bottom-right" /><div className="qr-placeholder"><Camera size={34} /><span>Camera preview placeholder</span></div><div className="scan-line" /></div></div><button className="demo-scan" onClick={() => beginVerification('demo-passenger')}>Simulate QR scan <ArrowRight size={16} /></button></>}
+        {state === 'processing' && <div className="result-state processing-state"><div className="result-icon success"><LoaderCircle className="processing-spinner" size={34} /></div><p className="eyebrow">PAYMENT CHECK</p><h2>Verifying fare…</h2><strong className="result-amount">R {amount}</strong><p className="result-copy">Checking passenger payment details.</p></div>}
+        {state === 'success' && <ResultState success amount={amount} />}
+        {state === 'declined' && <ResultState success={false} amount={amount} />}
+      </div>
+    </div>
+  );
 }
 
 function ResultState({ success, amount }: { success: boolean; amount: string }) {
